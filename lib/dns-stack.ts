@@ -5,7 +5,7 @@ import { ADMIN_BACKEND_URL, CP_BACKEND_URL, STACK_PREFIX } from './_constants';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 
 export interface VpcStackProps extends StackProps {
-  stageName: 'Beta' | 'Prod';
+  stageName: 'Beta' | 'Prod' | string;
   region: string;
   account: string;
 }

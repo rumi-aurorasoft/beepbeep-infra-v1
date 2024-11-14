@@ -3,6 +3,7 @@ import { Construct } from 'constructs';
 import { VpcStack } from './vpc-stack';
 import { DatabaseStack } from './rds-stack';
 import { CloudPanelStack } from './cp-stack';
+import { DnsStack } from './dns-stack';
 
 interface BackendStackProps extends StageProps {
   account: string;
@@ -18,6 +19,13 @@ export class BackendStack extends Stage {
 
     /** Initiation of stacks per stage */
     if (props) {
+
+      const dnsStack = new DnsStack(this, 'DnsStack', {
+        stageName: props.stageName,
+        region: props.region,
+        account: props.account
+      })
+
       const vpcStack = new VpcStack(this, 'VpcStack', {
         stageName: props.stageName,
         region: props.region,
@@ -29,7 +37,8 @@ export class BackendStack extends Stage {
         region: props.region,
         account: props.account,
         vpc: vpcStack.vpc,
-        connectEndpointSG: vpcStack.connectEndpointSecurityGroup
+        connectEndpointSG: vpcStack.connectEndpointSecurityGroup,
+        hostedZone: dnsStack.hostedZone
       })
 
       const databaseStack = new DatabaseStack(this, 'DatabaseStack', {
@@ -39,11 +48,10 @@ export class BackendStack extends Stage {
         vpc: vpcStack.vpc
       })
 
-      /** Adding dependency on vpcStack and appStack */
-      // appStack.addDependency(vpcStack);
+      /** Adding dependency on vpcStack and dnsStack */
       cloudPanelStack.addDependency(vpcStack);
       databaseStack.addDependency(vpcStack);
-
+      cloudPanelStack.addDependency(dnsStack);
     }
   }
 }

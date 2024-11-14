@@ -16,7 +16,8 @@ import {
   SubnetType,
   Vpc
 } from 'aws-cdk-lib/aws-ec2';
-import { REMOVAL_POLICY, STACK_PREFIX, RemovalPolicyStageProps } from './_constants';
+import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { REMOVAL_POLICY, STACK_PREFIX, RemovalPolicyStageProps, CP_BACKEND_URL, StageProps } from './_constants';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
@@ -27,6 +28,7 @@ export interface CloudPanelStackProps extends StackProps {
   account: string;
   vpc: Vpc;
   connectEndpointSG: SecurityGroup
+  hostedZone: HostedZone
 }
 
 export class CloudPanelStack extends Stack {
@@ -125,7 +127,7 @@ export class CloudPanelStack extends Stack {
     /** */
 
     /** Create an elastic IP address and associate with the EC2 instance */
-    new CfnEIP(this, `${props?.stageName}-${STACK_PREFIX}-CloudPanel-EIP-${props?.stageName}`, {
+   const publicIp = new CfnEIP(this, `${props?.stageName}-${STACK_PREFIX}-CloudPanel-EIP-${props?.stageName}`, {
       domain: 'vpc',
       instanceId: cloudPanelInstance.instanceId
     })
@@ -153,6 +155,14 @@ export class CloudPanelStack extends Stack {
       ],
       resources: [storageS3.bucketArn, `${storageS3.bucketArn}/*`],
     }))
+    /** */
+
+    /** Create an A record for the cloudpanel domain and point it to the eip of the cloudpanel instance */
+    new ARecord(this, `${props?.stageName}-${STACK_PREFIX}-CloudPanel-Domain`, {
+      zone: props?.hostedZone!,
+      target: RecordTarget.fromIpAddresses(publicIp.attrPublicIp),
+      recordName: CP_BACKEND_URL[props?.stageName as keyof StageProps]
+    })
     /** */
   }
 }
