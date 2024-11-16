@@ -17,7 +17,7 @@ import {
   Vpc
 } from 'aws-cdk-lib/aws-ec2';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
-import { REMOVAL_POLICY, STACK_PREFIX, RemovalPolicyStageProps, CP_BACKEND_URL, StageProps } from './_constants';
+import { ADMIN_BACKEND_URL, REMOVAL_POLICY, STACK_PREFIX, RemovalPolicyStageProps, CP_BACKEND_URL, StageProps } from './_constants';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
@@ -162,6 +162,14 @@ export class CloudPanelStack extends Stack {
       zone: props?.hostedZone!,
       target: RecordTarget.fromIpAddresses(publicIp.attrPublicIp),
       recordName: CP_BACKEND_URL[props?.stageName as keyof StageProps]
+    })
+    /** */
+
+    /** Create an A record for the actual admin page */
+    new ARecord(this, `${props?.stageName}-${STACK_PREFIX}-Admin-Domain`, {
+      zone: props?.hostedZone!,
+      target: RecordTarget.fromIpAddresses(publicIp.attrPublicIp),
+      recordName: ADMIN_BACKEND_URL[props?.stageName as keyof StageProps]
     })
     /** */
   }
