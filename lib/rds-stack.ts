@@ -104,13 +104,9 @@ export class DatabaseStack extends Stack {
         ClusterInstance.serverlessV2('read-endpoint-1', {
           publiclyAccessible: isBeta,
           scaleWithWriter: !isBeta
-        }),
-        ClusterInstance.serverlessV2('read-endpoint-2', {
-          publiclyAccessible: isBeta,
-          scaleWithWriter: !isBeta
         })
       ],
-      serverlessV2MaxCapacity: AuroraCapacityUnit.ACU_2,
+      serverlessV2MaxCapacity: isBeta ? AuroraCapacityUnit.ACU_1 : AuroraCapacityUnit.ACU_2,
       serverlessV2MinCapacity: AuroraCapacityUnit.ACU_1,
       parameterGroup: parameterGroup,
       removalPolicy: REMOVAL_POLICY[props?.stageName as keyof RemovalPolicyStageProps],

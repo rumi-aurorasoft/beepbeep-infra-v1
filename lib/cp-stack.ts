@@ -16,7 +16,7 @@ import {
   SubnetType,
   Vpc
 } from 'aws-cdk-lib/aws-ec2';
-import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
+import { ARecord, HostedZone, IHostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ADMIN_BACKEND_URL, REMOVAL_POLICY, STACK_PREFIX, RemovalPolicyStageProps, CP_BACKEND_URL, StageProps } from './_constants';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
@@ -28,7 +28,7 @@ export interface CloudPanelStackProps extends StackProps {
   account: string;
   vpc: Vpc;
   connectEndpointSG: SecurityGroup
-  hostedZone: HostedZone
+  hostedZone: IHostedZone
 }
 
 export class CloudPanelStack extends Stack {

@@ -23,7 +23,8 @@ export class BackendStack extends Stage {
       const dnsStack = new DnsStack(this, 'DnsStack', {
         stageName: props.stageName,
         region: props.region,
-        account: props.account
+        account: props.account,
+        isHostedZoneStack: props.stageName === 'Beta'
       })
 
       const vpcStack = new VpcStack(this, 'VpcStack', {
