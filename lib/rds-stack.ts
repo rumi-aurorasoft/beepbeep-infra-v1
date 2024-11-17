@@ -5,9 +5,10 @@ import {
   SecurityGroup,
   Peer,
   Vpc,
+  SubnetType,
 } from 'aws-cdk-lib/aws-ec2';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
-import { AuroraCapacityUnit, AuroraMysqlEngineVersion, ClusterInstance, Credentials, DatabaseCluster, DatabaseClusterEngine, ParameterGroup } from 'aws-cdk-lib/aws-rds';
+import { AuroraCapacityUnit, AuroraMysqlEngineVersion, ClusterInstance, Credentials, DatabaseCluster, DatabaseClusterEngine, ParameterGroup, SubnetGroup } from 'aws-cdk-lib/aws-rds';
 import { STACK_PREFIX, REMOVAL_POLICY, RemovalPolicyStageProps } from './_constants';
 
 
@@ -38,6 +39,22 @@ export class DatabaseStack extends Stack {
     )
     /** */
 
+    /** Allow RDS traffic from Rumi's IP for Beta stage */
+    if (props?.stageName === 'Beta') {
+      dbSecurityGroup.addIngressRule(
+        Peer.ipv4('106.185.151.182/32'),
+        Port.tcp(3306),
+        'Allow RDS Traffic for Rumi IP'
+      )
+      // Add rule for pinging
+      dbSecurityGroup.addIngressRule(
+        Peer.ipv4('106.185.151.182/32'),
+        Port.icmpPing(),
+        'Allow ICMP Ping for Rumi IP'
+      )
+    }
+    /** */
+
     /** Create a secrets manager to store the db credentials */
     const dbCredentials = new Secret(this, `${props?.stageName}-${STACK_PREFIX}-DB-Credentials`, {
       secretName: `${props?.stageName.toLowerCase()}-${STACK_PREFIX.toLowerCase()}-db-credentials`,
@@ -64,17 +81,29 @@ export class DatabaseStack extends Stack {
       }
     })
 
+    const isBeta = props?.stageName === "Beta"
     const dbCluster = new DatabaseCluster(this, `${props?.stageName}-${STACK_PREFIX}-DB-Cluster`, {
       engine: DatabaseClusterEngine.auroraMysql({version: AuroraMysqlEngineVersion.VER_3_06_0}),
       clusterIdentifier: `${props?.stageName.toLowerCase()}-${STACK_PREFIX.toLowerCase()}-db-cluster`,
       defaultDatabaseName: `app`,
       credentials: Credentials.fromSecret(dbCredentials),
-      vpc: props?.vpc!,
+      vpc: props?.vpc,
       securityGroups: [dbSecurityGroup],
-      writer: ClusterInstance.serverlessV2('write-endpoint'),
+      vpcSubnets: {
+        subnetType: isBeta ? SubnetType.PUBLIC : SubnetType.PRIVATE_WITH_EGRESS,
+      },
+      writer: ClusterInstance.serverlessV2('write-endpoint', {
+        publiclyAccessible: isBeta,
+      }),
       readers: [
-        ClusterInstance.serverlessV2('read-endpoint-1', {scaleWithWriter: true}),
-        ClusterInstance.serverlessV2('read-endpoint-2', {scaleWithWriter: true})
+        ClusterInstance.serverlessV2('read-endpoint-1', {
+          publiclyAccessible: isBeta,
+          scaleWithWriter: !isBeta
+        }),
+        ClusterInstance.serverlessV2('read-endpoint-2', {
+          publiclyAccessible: isBeta,
+          scaleWithWriter: !isBeta
+        })
       ],
       serverlessV2MaxCapacity: AuroraCapacityUnit.ACU_2,
       serverlessV2MinCapacity: AuroraCapacityUnit.ACU_1,

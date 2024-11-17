@@ -1,4 +1,4 @@
-import { Stack, StackProps} from 'aws-cdk-lib';
+import { RemovalPolicy, Stack, StackProps} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Vpc, SubnetType, SecurityGroup, CfnInstanceConnectEndpoint } from 'aws-cdk-lib/aws-ec2';
 import { STACK_PREFIX } from './_constants';
@@ -35,6 +35,10 @@ export class VpcStack extends Stack {
         },
       ],
     });
+    /** */
+
+    /** Set a retain policy when deleting VPC resources */
+    this.vpc.applyRemovalPolicy(RemovalPolicy.RETAIN);
     /** */
 
     /** Create an EC2 Connect Endpoint to ssh to the instances */

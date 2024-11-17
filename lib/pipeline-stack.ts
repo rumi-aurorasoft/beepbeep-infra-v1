@@ -6,7 +6,6 @@ import { Construct } from 'constructs';
 import { BackendStack } from './_stages';
 import { BEEPBEEP_ACCOUNT_NUMBER, BEEPBEEP_REGION } from './_constants';
 import { ServerApplication, ServerDeploymentGroup } from 'aws-cdk-lib/aws-codedeploy';
-import { CloudFormationCreateUpdateStackAction, CodeDeployServerDeployAction } from 'aws-cdk-lib/aws-codepipeline-actions';
 
 
 export class PipelineStack extends Stack {
