@@ -5,7 +5,7 @@ import { RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { BackendStack } from './_stages';
 import { BEEPBEEP_ACCOUNT_NUMBER, BEEPBEEP_REGION } from './_constants';
-import { ServerApplication, ServerDeploymentGroup } from 'aws-cdk-lib/aws-codedeploy';
+// import { ServerApplication, ServerDeploymentGroup } from 'aws-cdk-lib/aws-codedeploy';
 
 
 export class PipelineStack extends Stack {
@@ -29,20 +29,9 @@ export class PipelineStack extends Stack {
     /** */
 
     /** Create a CodeDeploy application and deployment group */
-    const application = new ServerApplication(this, 'Application-BeepbeepApp-V1', {
-      applicationName: 'beepbeep-app-v1'
-    })
-
-    const deploymentGroup = new ServerDeploymentGroup(this, 'DeploymentGroup-BeepbeepApp-V1', {
-      application: application,
-      deploymentGroupName: 'beepbeep-app-deployment-group-v1',
-      installAgent: true,
-      autoRollback: {
-        failedDeployment: true,
-        stoppedDeployment: true
-      },
-    })
-    /** */
+    // const application = new ServerApplication(this, 'Application-BeepbeepApp-V1', {
+    //   applicationName: 'beepbeep-app-v1'
+    // })
 
     /** Define the infrastructure source */
     const infraSource = CodePipelineSource.gitHub(
@@ -53,19 +42,19 @@ export class PipelineStack extends Stack {
     /** */
 
     /** Define the application source */
-    const applicationSource = CodePipelineSource.gitHub(
-      'rumi-aurorasoft/beepbeep-app-v1', 'main', {
-        authentication: token
-      }
-    )
+    // const applicationSource = CodePipelineSource.gitHub(
+    //   'rumi-aurorasoft/beepbeep-app-v1', 'main', {
+    //     authentication: token
+    //   }
+    // )
     /** */
 
     /** Create a build step for your application */
-    const buildStep = new ShellStep('Build-BeepbeepApp-V1', {
-      input: applicationSource,
-      commands: ['npm ci', 'npm run build', 'npm run cdk synth'],
-      primaryOutputDirectory: 'app'
-    })
+    // const buildStep = new ShellStep('Build-BeepbeepApp-V1', {
+    //   input: applicationSource,
+    //   commands: ['npm ci', 'npm run build', 'npm run cdk synth'],
+    //   primaryOutputDirectory: 'app'
+    // })
     /** */
 
     /** Pipeline initialization */
@@ -73,9 +62,9 @@ export class PipelineStack extends Stack {
       pipelineName: 'beepbeep-pipeline-v1',
       synth: new ShellStep('Synth', {
         input: infraSource,
-        additionalInputs: {
-          'app': applicationSource
-        },
+        // additionalInputs: {
+        //   'app': applicationSource
+        // },
         commands: ['npm ci', 'npm run build', 'npx cdk synth']
       }),
       artifactBucket: artifactBucket,
@@ -87,17 +76,13 @@ export class PipelineStack extends Stack {
       stageName: 'Beta',
       region: BEEPBEEP_REGION,
       account: BEEPBEEP_ACCOUNT_NUMBER,
-    }), {
-      pre: [buildStep]
-    });
+    }));
 
     this.pipeline.addStage(new BackendStack(this, 'Beepbeep-Infra-V1-Prod', {
       stageName: 'Prod',
       region: BEEPBEEP_REGION,
       account: BEEPBEEP_ACCOUNT_NUMBER
-    }), {
-      pre: [buildStep]
-    });
+    }));
     /** */
   }
 }
