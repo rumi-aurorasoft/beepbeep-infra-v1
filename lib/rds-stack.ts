@@ -51,11 +51,10 @@ export class DatabaseStack extends Stack {
         Port.tcp(3306),
         'Allow RDS Traffic for Rama IP'
       )
-      // Add rule for pinging
       dbSecurityGroup.addIngressRule(
-        Peer.ipv4('106.185.151.182/32'),
-        Port.icmpPing(),
-        'Allow ICMP Ping for Rumi IP'
+        Peer.ipv4('103.175.213.138/32'),
+        Port.tcp(3306),
+        'Allow RDS Traffic for Rama IP 2'
       )
     }
     /** */
